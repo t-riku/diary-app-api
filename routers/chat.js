@@ -5,7 +5,7 @@ const axios = require("axios");
 const isAuthenticated = require("../middlewares/isAuthenticated");
 
 // OpenAI API設定
-const openaiApiKey = "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";
+const openaiApiKey = process.env.OPENAI_API_KEY;
 const openaiApiUrl = "https://api.openai.com/v1/chat/completions"; // OpenAIエンドポイント
 
 let contextText = "";
