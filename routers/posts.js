@@ -43,7 +43,7 @@ router.post("/post", isAuthenticated, async (req, res) => {
 router.get("/get_latest_post", async (req, res) => {
   try {
     const latestPosts = await prisma.post.findMany({
-      take: 10,
+      take: 20,
       orderBy: { createdAt: "desc" },
       include: {
         author: {
@@ -77,6 +77,81 @@ router.get("/:userId", async (req, res) => {
     });
 
     return res.status(200).json(userPosts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "サーバーエラーです。" });
+  }
+});
+
+// 呟き編集用API
+router.post("/edit/:postId", isAuthenticated, async (req, res) => {
+  const { postId } = req.params;
+  const { content } = req.body;
+
+  if (!content) {
+    return res.status(400).json({ message: "投稿内容がありません" });
+  }
+
+  try {
+    const existingPost = await prisma.post.findUnique({
+      where: {
+        id: parseInt(postId),
+      },
+    });
+
+    if (!existingPost) {
+      return res
+        .status(404)
+        .json({ message: "指定された投稿が見つかりません" });
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: {
+        id: parseInt(postId),
+      },
+      data: {
+        content,
+      },
+      include: {
+        author: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "サーバーエラーです。" });
+  }
+});
+
+// 投稿削除用API
+router.post("/delete/:postId", isAuthenticated, async (req, res) => {
+  const { postId } = req.params;
+
+  try {
+    const existingPost = await prisma.post.findUnique({
+      where: {
+        id: parseInt(postId),
+      },
+    });
+
+    if (!existingPost) {
+      return res
+        .status(404)
+        .json({ message: "指定された投稿が見つかりません" });
+    }
+
+    await prisma.post.delete({
+      where: {
+        id: parseInt(postId),
+      },
+    });
+
+    res.status(204).send();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "サーバーエラーです。" });

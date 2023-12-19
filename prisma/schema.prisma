@@ -13,27 +13,41 @@ datasource db {
 // 下記をマイグレイトして、Json形式からSQL文に置き換える
 // データベースのモデル
 model User {
-  id Int @id @default(autoincrement())
-  username String
-  email String @unique
-  password String
-  posts Post[]
-  profile Profile?
+  id         Int       @id @default(autoincrement())
+  username   String
+  email      String    @unique
+  password   String
+  posts      Post[]
+  profile    Profile?
+  diarySettings DiarySettings?
 }
 
 // ユーザー一人に対して多くのPost
 model Post {
-  id Int @id @default(autoincrement())
-  content String
+  id        Int      @id @default(autoincrement())
+  content   String
   createdAt DateTime @default(now())
-  authorId Int
-  author User @relation(fields: [authorId],references: [id])
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
 }
 
 model Profile {
-  id Int @id @default(autoincrement())
-  bio String?
+  id               Int    @id @default(autoincrement())
+  bio              String?
   profileImageUrl String?
-  userId Int @unique
-  user User @relation(fields:[userId],references:[id])
+  userId           Int    @unique
+  user             User   @relation(fields: [userId], references: [id])
+}
+
+model DiarySettings {
+  id         Int            @id @default(autoincrement())
+  userId     Int            @unique
+  user       User           @relation(fields: [userId], references: [id])
+  tone       String?
+  textFormat String?
+  diaryFormat String?
+  topic      String?
+  emotion    String?
+  me         String?
+  person     String?
 }

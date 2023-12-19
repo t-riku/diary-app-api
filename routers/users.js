@@ -51,4 +51,53 @@ router.get("/profile/:userId", async (req, res) => {
   }
 });
 
+router.post("/profile/edit/:userId", isAuthenticated, async (req, res) => {
+  const { userId } = req.params;
+  const { bio, profileImageUrl, username } = req.body;
+
+  try {
+    // ユーザーとプロフィールを検索
+    const user = await prisma.user.findUnique({
+      where: {
+        id: parseInt(userId),
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "指定されたユーザーが見つかりません" });
+    }
+
+    // プロフィールを更新
+    const updatedProfile = await prisma.profile.update({
+      where: {
+        id: user.profile.id,
+      },
+      data: {
+        bio,
+        profileImageUrl,
+      },
+    });
+
+    // ユーザーのユーザーネームを更新
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: parseInt(userId),
+      },
+      data: {
+        username,
+      },
+    });
+
+    res.status(200).json({ user: updatedUser, profile: updatedProfile });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "サーバーエラーです。" });
+  }
+});
+
 module.exports = router;
