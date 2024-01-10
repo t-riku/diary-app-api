@@ -50,4 +50,7 @@ model DiarySettings {
   emotion    String?
   me         String?
   person     String?
+  maxToken Int?
+  frequencyPenalty Int?
+  temperature Int?
 }

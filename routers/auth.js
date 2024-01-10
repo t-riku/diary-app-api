@@ -25,9 +25,24 @@ router.post("/register", async (req, res) => {
           profileImageUrl: defaultIconImage,
         },
       },
+      diarySettings: {
+        create: {
+          tone: "",
+          textFormat: "",
+          diaryFormat: "",
+          topic: "",
+          emotion: "",
+          me: "",
+          person: "",
+          maxToken: 150,
+          frequencyPenalty: 0,
+          temperature: 1,
+        },
+      },
     },
     include: {
       profile: true,
+      diarySettings: true,
     },
   });
 
