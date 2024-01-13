@@ -103,8 +103,14 @@ router.post("/setting/get/:userId", isAuthenticated, async (req, res) => {
       },
     });
 
+    if (!user) {
+      return res
+        .status(404)
+        .json({ loginMsg: "ログインしないと設定は完了されません" });
+    }
+
     if (!user.diarySettings) {
-      return res.status(404).json({ message: "ログインしてください。" });
+      return null;
     }
 
     // userIdに一致するdiarySettingsを検索
@@ -119,11 +125,11 @@ router.post("/setting/get/:userId", isAuthenticated, async (req, res) => {
       return res.status(200).json({ settings: findSettings });
     } else {
       // 設定が見つからない場合はエラーレスポンスを返す
-      return res.status(404).json({ message: "設定が見つかりません。" });
+      return res.status(404).json({ noSettingMsg: "設定が見つかりません。" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "サーバーエラーです。" });
+    res.status(500).json({ serverErrorMsg: "サーバーエラーです。" });
   }
 });
 

@@ -10,6 +10,14 @@ const prisma = new PrismaClient();
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
+  const isEmail = await prisma.user.findUnique({ where: { email } });
+
+  if (isEmail) {
+    return res
+      .status(401)
+      .json({ emailErorr: "そのEmailアドレスは既に使用されています。" });
+  }
+
   const defaultIconImage = generateIdenticon(email);
 
   const hashedPassword = await bcrypt.hash(password, 10);
