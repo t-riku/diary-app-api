@@ -148,7 +148,7 @@ router.post("/content/:userId", isAuthenticated, async (req, res) => {
 
   try {
     // userIdに一致するdiarySettingsを検索
-    const findSettings = await prisma.diarySettings.findFirst({
+    const findSettings = await prisma.diarySettings.findUnique({
       where: {
         userId: parseInt(userId),
       },
