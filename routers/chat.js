@@ -114,7 +114,8 @@ router.post("/setting/get/:userId", isAuthenticated, async (req, res) => {
     }
 
     // userIdに一致するdiarySettingsを検索
-    const findSettings = await prisma.diarySettings.findFirst({
+    const findSettings = await prisma.diarySettings.findUnique;
+    findUnique({
       where: {
         userId: parseInt(userId),
       },
