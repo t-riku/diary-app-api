@@ -10,74 +10,88 @@ const prisma = new PrismaClient();
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
-  const isEmail = await prisma.user.findUnique({ where: { email } });
+  const existingUser = await prisma.user.findUnique({ where: { email } });
 
-  if (isEmail) {
+  if (existingUser) {
     return res
       .status(401)
-      .json({ emailErorr: "そのEmailアドレスは既に使用されています。" });
+      .json({ emailError: "そのEmailアドレスは既に使用されています。" });
   }
 
   const defaultIconImage = generateIdenticon(email);
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      username,
-      email,
-      password: hashedPassword,
-      profile: {
-        create: {
-          bio: "はじめまして",
-          profileImageUrl: defaultIconImage,
+  try {
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        profile: {
+          create: {
+            bio: "はじめまして",
+            profileImageUrl: defaultIconImage,
+          },
+        },
+        diarySettings: {
+          create: {
+            tone: "",
+            textFormat: "",
+            diaryFormat: "",
+            topic: "",
+            emotion: "",
+            me: "",
+            person: "",
+            maxToken: 150,
+            frequencyPenalty: 0,
+            temperature: 1,
+          },
         },
       },
-      diarySettings: {
-        create: {
-          tone: "",
-          textFormat: "",
-          diaryFormat: "",
-          topic: "",
-          emotion: "",
-          me: "",
-          person: "",
-          maxToken: 150,
-          frequencyPenalty: 0,
-          temperature: 1,
-        },
+      include: {
+        profile: true,
+        diarySettings: true,
       },
-    },
-    include: {
-      profile: true,
-      diarySettings: true,
-    },
-  });
+    });
 
-  return res.json({ user });
+    return res.json({ user });
+  } catch (error) {
+    console.error("ユーザーの登録中にエラーが発生しました:", error);
+    return res
+      .status(500)
+      .json({ error: "ユーザーの登録中にエラーが発生しました。" });
+  }
 });
 
 //ユーザーログインAPI
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user) {
-    return res.status(401).json({ erorr: "そのユーザーは存在しません。" });
+    if (!user) {
+      return res.status(401).json({ error: "そのユーザーは存在しません。" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "そのパスワードは間違っています" });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
+      expiresIn: "1d",
+    });
+
+    return res.json({ token });
+  } catch (error) {
+    console.error("ログイン中にエラーが発生しました:", error);
+    return res
+      .status(500)
+      .json({ error: "ログイン中にエラーが発生しました。" });
   }
-
-  const isPasswordVaild = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordVaild) {
-    return res.status(401).json({ error: "そのパスワードは間違っています" });
-  }
-
-  const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
-    expiresIn: "1d",
-  });
-
-  return res.json({ token });
 });
 
 module.exports = router;
